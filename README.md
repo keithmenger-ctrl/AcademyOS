@@ -49,15 +49,15 @@ Suites that need local services:
 
 | Command | Needs | Checks |
 | --- | --- | --- |
-| `npm run test:db` | local Postgres 16, `su postgres` | `supabase/tests/run.sh`: rebuilds `academyos_test`, runs the 59 tenant/role isolation checks in `rls.sql`; exits non-zero on any error or if the pass marker is missing |
+| `npm run test:db` | Postgres 16 and superuser access: `PGHOST`/`PGPORT`/`PGUSER`/`PGPASSWORD` env vars, or run as root to use `su postgres`. CI runs it against a `postgres:16` service | `supabase/tests/run.sh`: rebuilds `academyos_test`, runs the 59 tenant/role isolation checks in `rls.sql`; exits non-zero on any error or if the pass marker is missing |
 | `npm run test:e2e` | Postgres 16, GoTrue (via `scripts/dev-up.sh`), dev server on :3000 | `scripts/regress.sh`: every Playwright suite in `scripts/e2e/`, RLS, lint, typecheck |
 
 ## Testing the database locally
-Needs a local Postgres 16 (no Supabase required; an auth stub stands in for Supabase's `auth` schema). `npm run test:db` does both steps:
+Needs a local Postgres 16 (no Supabase required; an auth stub stands in for Supabase's `auth` schema). `npm run test:db` does both steps. Point it at any superuser connection, e.g. `PGHOST=localhost PGUSER=postgres PGPASSWORD=... npm run test:db` (as root without `PGHOST` it uses `su postgres`):
 
 ```bash
 bash supabase/tests/reset.sh                       # rebuild db, run migrations + seed
-su postgres -c "psql -q academyos_test -f supabase/tests/rls.sql"   # 59 tenant/role isolation checks
+psql -q academyos_test -f supabase/tests/rls.sql   # 59 tenant/role isolation checks
 ```
 
 ## Development plan
