@@ -42,6 +42,7 @@ From a clean clone (`npm ci` first), no prior build needed:
 ```bash
 npm run lint
 npm run typecheck   # next typegen && tsc --noEmit
+npm test            # unit tests (node --test), run under two timezones; no services needed
 NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321 NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder npm run build
 ```
 
