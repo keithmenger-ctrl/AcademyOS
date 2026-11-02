@@ -8,7 +8,7 @@ same thing on hosted Supabase and Vercel. Items marked **verify** could not be e
 2. SQL editor: run every file in `supabase/migrations` in order, `0001_schema.sql` through `0011_demo_org_neutral.sql`. Do **not** run `supabase/tests/*` stub files; Supabase
    already has the `auth` schema and the `anon` / `authenticated` roles.
 3. Do **not** run `supabase/seed.sql` on production: its logins use a publicly documented password. Use it only on a
-   separate staging/demo project. Prospects don't need it: signup creates their own demo academy.
+   separate staging/demo project. Nobody needs it: the shell works with empty states, and (only if the dormant `FEATURE_DEMO` is on) signup can create a demo academy.
 4. Authentication → URL configuration: Site URL = your production URL; add `https://<domain>/auth/confirm` to redirect URLs.
 5. Authentication → Providers → Email: decide on "Confirm email". If on, new owners finish setup at `/onboarding` after
    confirming (already handled).
@@ -22,16 +22,16 @@ same thing on hosted Supabase and Vercel. Items marked **verify** could not be e
 | `DATABASE_URL` | Settings → Database → **Transaction pooler** connection string (port 6543) |
 | `APP_URL` | `https://<your domain>` (**required** for emailed links) |
 | `SMTP_URL`, `MAIL_FROM` | optional; any SMTP provider, e.g. `smtps://resend:<API key>@smtp.resend.com:465` and `AcademyOS <noreply@yourdomain.com>`. Enables emailed invites + "Forgot password?" |
-| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | optional; leave empty for dev-mode billing |
-| `ANTHROPIC_API_KEY` | optional; AI drafts fall back to templates |
-| `ANTHROPIC_MODEL` | optional; overrides the Claude model used for AI drafts (leave empty for the default) |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | dormant billing only; leave empty |
+| `ANTHROPIC_API_KEY` | dormant assistant only; leave empty |
+| `ANTHROPIC_MODEL` | dormant assistant only; leave empty |
 | `NEXT_PUBLIC_APP_NAME` | optional; product name shown in the browser title, app shell and emails (defaults to `AcademyOS`) |
-| `FEATURE_BILLING` | optional; `true` turns on memberships, plans, Stripe and parent billing (off otherwise) |
-| `FEATURE_ASSISTANT` | optional; `true` turns on the AI assistant |
-| `FEATURE_PILOT_FEEDBACK` | optional; `true` turns on the feedback button and usage-event tracking |
-| `FEATURE_DEMO` | optional; `true` shows "Start with demo data" at signup and the demo view switcher |
+| `FEATURE_BILLING` | dormant; leave unset. `true` turns on memberships, plans, Stripe and parent billing |
+| `FEATURE_ASSISTANT` | dormant; leave unset. `true` turns on the AI assistant |
+| `FEATURE_PILOT_FEEDBACK` | dormant; leave unset. `true` turns on the feedback button and usage-event tracking |
+| `FEATURE_DEMO` | dormant; leave unset. `true` shows "Start with demo data" at signup and the demo view switcher |
 
-Feature flags are off unless set to exactly `true`. `NEXT_PUBLIC_*` values are baked in at build time, so redeploy after
+The `FEATURE_*` flags gate dormant code that is not part of the shell's scope. They are off unless set to exactly `true`; the default deployment should leave all of them unset. `NEXT_PUBLIC_*` values are baked in at build time, so redeploy after
 changing them.
 
 Local/dev only, never set in production: `DEV_GOTRUE_URL` (proxies `/auth/v1` to a local GoTrue),
@@ -45,7 +45,9 @@ test below.
 ## 3. Vercel
 Import the GitHub repo, framework = Next.js, no build overrides. Deploy.
 
-## 4. Stripe (when ready to charge)
+## 4. Stripe (dormant; skip for the shell)
+Only relevant if the dormant billing feature is deliberately enabled with `FEATURE_BILLING=true`. The generic shell does not use Stripe.
+
 1. Test mode first. Set `STRIPE_SECRET_KEY` (sk_test_…).
 2. Developers → Webhooks → add endpoint `https://<domain>/api/stripe/webhook` with events
    `checkout.session.completed`, `customer.subscription.created|updated|deleted`, `invoice.paid`,
@@ -59,8 +61,8 @@ Import the GitHub repo, framework = Next.js, no build overrides. Deploy.
 From a machine with Node + Playwright's Chromium:
 ```bash
 BASE_URL=https://<domain> node scripts/e2e/phase2.mjs   # auth + role isolation
-BASE_URL=https://<domain> node scripts/e2e/demo.mjs     # signup with demo data + view switcher
 ```
+`scripts/e2e/demo.mjs` (signup with demo data + view switcher) only applies if the dormant `FEATURE_DEMO` is on.
 Most other suites assume the shared seed (`supabase/seed.sql`); `pilot.mjs`, `phase12.mjs` and `stripe-webhook.mjs` also
 need direct database access (`DATABASE_URL`). Run the RLS test suite only against a throwaway database.
 
