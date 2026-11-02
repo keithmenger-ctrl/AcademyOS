@@ -52,6 +52,7 @@ Suites that need local services:
 | Command | Needs | Checks |
 | --- | --- | --- |
 | `npm run test:db` | Postgres 16 and superuser access: `PGHOST`/`PGPORT`/`PGUSER`/`PGPASSWORD` env vars, or run as root to use `su postgres`. CI runs it against a `postgres:16` service | `supabase/tests/run.sh`: rebuilds `academyos_test`, runs the 59 tenant/role isolation checks in `rls.sql`; exits non-zero on any error or if the pass marker is missing |
+| `npm run test:e2e:shell` | Postgres 16 (a throwaway cluster is started if `PGHOST` is unset; macOS Homebrew `postgresql@16` or Linux `postgresql-16`), Go (one-time GoTrue build, cached in `~/.cache/academyos-e2e`), and Playwright's Chromium (`npx playwright-core install chromium-headless-shell`). No Docker, no `.env.local`, no seed data | `scripts/e2e-shell.sh`: builds and starts the app on random ports against a fresh database with every optional feature off, then runs `scripts/e2e/shell.mjs`: sign up/in/out, org isolation (org B cannot see or open org A's athletes), athletes list/search/add/edit, CSV import with blank sport, position and school columns. Never touches Stripe, Anthropic or SMTP. CI runs it as the `e2e` job |
 | `npm run test:e2e` | Postgres 16, GoTrue (via `scripts/dev-up.sh`), dev server on :3000 | `scripts/regress.sh`: every Playwright suite in `scripts/e2e/`, RLS, lint, typecheck |
 
 ## Testing the database locally

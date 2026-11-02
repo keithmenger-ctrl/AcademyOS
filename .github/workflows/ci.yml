@@ -47,3 +47,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: npm run test:db
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/academyos-e2e/gotrue-*
+          key: gotrue-${{ runner.os }}-${{ hashFiles('scripts/e2e-shell.sh') }}
+      - run: npm ci
+      - run: npx playwright-core install --with-deps chromium-headless-shell
+      - run: npm run test:e2e:shell
+      - if: failure()
+        run: tail -n 60 /tmp/academyos-e2e.*/*.log
