@@ -10,7 +10,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "TZ=America/Los_Angeles node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test \"src/**/*.test.mts\" && TZ=Pacific/Auckland node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test \"src/**/*.test.mts\"",
     "test:db": "bash supabase/tests/run.sh",
-    "test:e2e": "bash scripts/regress.sh"
+    "test:e2e": "bash scripts/regress.sh",
+    "test:e2e:shell": "bash scripts/e2e-shell.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",

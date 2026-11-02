@@ -5,10 +5,13 @@ import fs from 'node:fs'
 export const BASE = process.env.BASE_URL || 'http://localhost:3000'
 export const PASSWORD = 'academyos-demo'
 
+// E2E_CHROMIUM_PATH wins; then the Linux sandbox's /opt/pw-browsers; otherwise Playwright's own installed Chromium
+// (`npx playwright-core install chromium`).
 const exe = () => {
+  if (process.env.E2E_CHROMIUM_PATH) return process.env.E2E_CHROMIUM_PATH
   const root = process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/pw-browsers'
-  const dir = fs.readdirSync(root).find((d) => /^chromium-\d+$/.test(d))
-  return `${root}/${dir}/chrome-linux/chrome`
+  const dir = fs.existsSync(root) && fs.readdirSync(root).find((d) => /^chromium-\d+$/.test(d))
+  return dir ? `${root}/${dir}/chrome-linux/chrome` : undefined
 }
 
 export async function launch(viewport = { width: 1280, height: 800 }) {
